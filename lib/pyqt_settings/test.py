@@ -4,7 +4,7 @@ from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPushButton, \
     QFileDialog
 
-from pyqt_settings.dialog import SettingDialog, settingDialogSavePosition
+from pyqt_settings.dialog import createSettingDialogClass
 from pyqt_settings.field.boolean import BoolField
 from pyqt_settings.field.control import ControlledField
 from pyqt_settings.field.integer import IntField
@@ -28,7 +28,7 @@ class MySettings(QSettings):
 
 
 mySettings = MySettings('ostr00000', 'SettingsTest')
-settingDialogSavePosition(mySettings)
+SettingDialog = createSettingDialogClass(mySettings)
 
 
 class MyWidget(QWidget):

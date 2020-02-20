@@ -2,62 +2,63 @@ import logging
 from typing import Dict
 
 from PyQt5.QtCore import QSettings
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QVBoxLayout
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QVBoxLayout, QWidget
 
 from pyqt_settings.field.base import Field
 from pyqt_settings.gui_widget.base import FieldWidget
 from pyqt_settings.util.geometry_saver_meta import GeometrySaverMeta
-from pyqt_settings.util.setting_wrapper import SettingWrapper
 
 logger = logging.getLogger(__name__)
 
-_settingDialogWrapper = SettingWrapper()
 
+def createSettingDialogClass(settings: QSettings = None, saveName: str = None):
+    """
+    :param settings: where save dialog position
+    :param saveName: dialog key in setting in section 'geometry'
+    :return: dialog that create representation of field in setting
+    """
 
-def settingDialogSavePosition(settings: QSettings):
-    """Optional function. If performed SettingDialog will save itself position"""
-    _settingDialogWrapper.setting = settings
+    class SettingDialog(QDialog,
+                        metaclass=GeometrySaverMeta.wrap(QDialog),
+                        settings=settings, saveName=saveName):
 
+        def __init__(self, settings_: QSettings, parent: QWidget = None):
+            super().__init__(parent)
+            self.settings = settings_
+            self._settingName2widget: Dict[str, FieldWidget] = {}
 
-class SettingDialog(QDialog,
-                    metaclass=GeometrySaverMeta.wrap(QDialog),
-                    settings=_settingDialogWrapper):
+            self.mainLayout = QVBoxLayout(self)
+            self.layout = QFormLayout()
+            self.mainLayout.addLayout(self.layout)
 
-    def __init__(self, settings_: QSettings, parent=None):
-        super().__init__(parent)
-        self.settings = settings_
-        self._settingName2widget: Dict[str, FieldWidget] = {}
+            self._createButtons()
+            self._createWidgets()
 
-        self.mainLayout = QVBoxLayout(self)
-        self.layout = QFormLayout()
-        self.mainLayout.addLayout(self.layout)
-        self._createButtons()
+        def _createButtons(self):
+            self.buttonBox = QDialogButtonBox(
+                QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
 
-        self.createWidgets()
+            self.buttonBox.accepted.connect(self.accept)
+            self.buttonBox.rejected.connect(self.reject)
+            self.accepted.connect(self.onAccepted)
 
-    def _createButtons(self):
-        self.buttonBox = QDialogButtonBox(
-            QDialogButtonBox.Ok | QDialogButtonBox.Cancel, self)
+            self.mainLayout.addWidget(self.buttonBox)
 
-        self.buttonBox.accepted.connect(self.accept)
-        self.buttonBox.rejected.connect(self.reject)
-        self.accepted.connect(self.onAccepted)
+        def _createWidgets(self):
+            for settingName, field in type(self.settings).__dict__.items():
+                if isinstance(field, Field) and getattr(field, 'widgetClass', False):
+                    widget = field.widgetClass(*field.widgetArgs)
+                    widget.setValue(getattr(self.settings, settingName))
+                    displayName = settingName.lower().replace('_', ' ').capitalize()
+                    self.layout.addRow(displayName, widget)
+                    self._settingName2widget[settingName] = widget
 
-        self.mainLayout.addWidget(self.buttonBox)
+        def onAccepted(self):
+            for settingName, widget in self._settingName2widget.items():
+                val = widget.getValue()
+                logger.debug(f"Set {settingName} = {val}")
+                setattr(self.settings, settingName, val)
 
-    def createWidgets(self):
-        for settingName, field in type(self.settings).__dict__.items():
-            if isinstance(field, Field) and getattr(field, 'widgetClass', False):
-                widget = field.widgetClass(*field.widgetArgs)
-                widget.setValue(getattr(self.settings, settingName))
-                displayName = settingName.lower().replace('_', ' ').capitalize()
-                self.layout.addRow(displayName, widget)
-                self._settingName2widget[settingName] = widget
+            self.settings.sync()
 
-    def onAccepted(self):
-        for settingName, widget in self._settingName2widget.items():
-            val = widget.getValue()
-            logger.debug(f"Set {settingName} = {val}")
-            setattr(self.settings, settingName, val)
-
-        self.settings.sync()
+    return SettingDialog

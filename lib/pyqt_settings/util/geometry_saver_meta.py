@@ -67,7 +67,9 @@ class GeometrySaverMeta(BaseMeta):
             closeEvent = attrs['closeEvent']
         except KeyError:
             def closeEvent(self, event):
-                return super(obj, self).closeEvent(event)
+
+                s = super(obj, self)
+                return s.closeEvent(event)
 
         try:
             __init__ = attrs['__init__']
