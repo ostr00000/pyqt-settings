@@ -2,5 +2,5 @@
 
 #### TODO
 - add list widget
-- prepare setup.py
+- add description to readme
 
