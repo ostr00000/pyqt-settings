@@ -10,6 +10,7 @@ from pyqt_settings.factory.config_fun import ConfigFunc
 from pyqt_settings.field.boolean import BoolField
 from pyqt_settings.field.control import ControlledField
 from pyqt_settings.field.integer import IntField
+from pyqt_settings.field.list import ListField
 from pyqt_settings.field.string import StrField
 from pyqt_settings.gui_widget.combo_box import ComboBoxFieldWidget
 from pyqt_settings.gui_widget.file_dialog import FileDialogFieldWidget
@@ -38,6 +39,8 @@ class MySettings(QSettings):
         ConfigFunc(QFileDialog.setWindowTitle, 'Select any dir'),
         ConfigFunc(QFileDialog.setFileMode, QFileDialog.Directory),
     )
+
+    list_Text = ListField('test/list')
 
 
 mySettings = MySettings('ostr00000', 'SettingsTest')
