@@ -1,21 +1,20 @@
-from typing import Dict, Callable, Tuple
-
 from PyQt5.QtCore import QMargins
-from PyQt5.QtWidgets import QLineEdit, QWidget, QToolButton, \
+from PyQt5.QtWidgets import QLineEdit, QToolButton, \
     QFileDialog, QHBoxLayout
 
+from pyqt_settings.factory.config_fun import ConfigFunc
 from pyqt_settings.gui_widget.base import FieldWidget
 
 
-class FileDialogFieldWidget(QWidget, FieldWidget[str]):
+class FileDialogFieldWidget(FieldWidget[str]):
 
-    def __init__(self, function2args: Dict[Callable, Tuple] = None):
+    def __init__(self, *configFunction: ConfigFunc):
         """
         function - Unbound method for QFileDialog (self will be provided)
         args - arguments for this function
         """
         super().__init__()
-        self.function2args = dict(function2args or {})
+        self.configFunctions = configFunction
 
         self.lineEdit = QLineEdit(self)
         self.selectFileButton = QToolButton(self)
@@ -29,8 +28,8 @@ class FileDialogFieldWidget(QWidget, FieldWidget[str]):
 
     def onSelectFileClicked(self):
         dialog = QFileDialog()
-        for function, args in self.function2args.items():
-            function(dialog, *args)
+        for configFunc in self.configFunctions:
+            configFunc(dialog)
 
         if dialog.exec():
             fileName, *_ = dialog.selectedFiles()

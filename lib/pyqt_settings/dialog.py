@@ -5,7 +5,6 @@ from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QVBoxLayout, QWidget
 
 from pyqt_settings.field.base import Field
-from pyqt_settings.gui_widget.base import FieldWidget
 from pyqt_settings.util.geometry_saver_meta import GeometrySaverMeta
 
 logger = logging.getLogger(__name__)
@@ -25,7 +24,7 @@ def createSettingDialogClass(settings: QSettings = None, saveName: str = None):
         def __init__(self, settings_: QSettings, parent: QWidget = None):
             super().__init__(parent)
             self.settings = settings_
-            self._settingName2widget: Dict[str, FieldWidget] = {}
+            self._settingName2field: Dict[str, Field] = {}
 
             self.mainLayout = QVBoxLayout(self)
             self.layout = QFormLayout()
@@ -33,6 +32,7 @@ def createSettingDialogClass(settings: QSettings = None, saveName: str = None):
 
             self._createButtons()
             self._createWidgets()
+            self.finished.connect(self.onFinished)
 
         def _createButtons(self):
             self.buttonBox = QDialogButtonBox(
@@ -46,19 +46,30 @@ def createSettingDialogClass(settings: QSettings = None, saveName: str = None):
 
         def _createWidgets(self):
             for settingName, field in type(self.settings).__dict__.items():
-                if isinstance(field, Field) and getattr(field, 'widgetClass', False):
-                    widget = field.widgetClass(*field.widgetArgs)
-                    widget.setValue(getattr(self.settings, settingName))
+                if isinstance(field, Field) and field.widgetFactory is not None:
+                    widget = field.widgetFactory()
+                    val = getattr(self.settings, settingName)
+                    widget.setValue(val)
+                    field.widget = widget
+
                     displayName = settingName.lower().replace('_', ' ').capitalize()
                     self.layout.addRow(displayName, widget)
-                    self._settingName2widget[settingName] = widget
+                    self._settingName2field[settingName] = field
 
         def onAccepted(self):
-            for settingName, widget in self._settingName2widget.items():
-                val = widget.getValue()
+            for settingName, field in self._settingName2field.items():
+                val = field.widget.getValue()
+                ok = field.__set__(self.settings, val)
+                if ok is False:
+                    continue
                 logger.debug(f"Set {settingName} = {val}")
-                setattr(self.settings, settingName, val)
 
             self.settings.sync()
+
+        def onFinished(self):
+            for settingName, field in self._settingName2field.items():
+                field.widget = None
+
+            self._settingName2field.clear()
 
     return SettingDialog

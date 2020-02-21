@@ -8,4 +8,4 @@ class LineEditFieldWidget(QLineEdit, FieldWidget[str]):
         return self.text()
 
     def setValue(self, value):
-        self.setText(value)
+        self.setText(str(value))
