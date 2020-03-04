@@ -3,7 +3,7 @@ from typing import Protocol, Any, runtime_checkable
 from PyQt5.QtWidgets import QWidget, QDialog, QMainWindow
 from decorator import decorator
 
-from pyqt_settings.util.base_meta import BaseMeta
+from pyqt_settings.metaclass.base import BaseMeta
 
 
 @runtime_checkable
