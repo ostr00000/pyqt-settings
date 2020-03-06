@@ -7,7 +7,7 @@ setup(
     description='Descriptors for QSettings with GUI generating',
     packages=find_packages(where="lib", exclude=("*test*",)),
     package_dir={"": "lib"},
-    install_requires=['decorator', 'PyQt5'],
+    install_requires=['decorator', 'PyQt5', 'boltons'],
     extras_require={
         'dev': ['PyQt5-stubs'],
     },
