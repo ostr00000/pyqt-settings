@@ -10,16 +10,18 @@ from pyqt_settings.metaclass.geometry_saver import GeometrySaverMeta
 logger = logging.getLogger(__name__)
 
 
-def createSettingDialogClass(settings: QSettings = None, saveName: str = None):
+def createSettingDialogClass(settings: QSettings = None):
     """
     :param settings: where save dialog position
-    :param saveName: dialog key in setting in section 'geometry'
     :return: dialog that create representation of field in setting
     """
 
-    class SettingDialog(QDialog,
-                        metaclass=GeometrySaverMeta.wrap(QDialog),
-                        settings=settings, saveName=saveName):
+    class SettingDialog(
+        QDialog,
+        metaclass=GeometrySaverMeta.wrap(QDialog),
+        settings=settings,
+        saveName=f'{settings.applicationName()}_SettingDialog'
+    ):
 
         def __init__(self, settings_: QSettings, parent: QWidget = None):
             super().__init__(parent)
