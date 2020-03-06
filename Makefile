@@ -1,4 +1,4 @@
-MAIN_PACKAGE_NAME=pyqt-settings
+MAIN_PACKAGE_NAME=pyqt_settings
 
 UIC=pyuic5
 RCC=pyrcc5
@@ -19,11 +19,14 @@ all: ui resources
 ui: $(COMPILED_UI_FILES)
 
 $(COMPILED_UI_DIR)/ui_%.py : $(UI_DIR)/%.ui
+	mkdir -p $(COMPILED_UI_DIR)
 	$(UIC) $< --from-imports -o $@
 
 resources: $(COMPILED_UI_DIR)/resources_rc.py
 
 $(COMPILED_UI_DIR)/resources_rc.py: $(RESOURCES) $(RESOURCES_SRC)
+	mkdir -p $(COMPILED_UI_DIR)
+	echo 'from . import resources_rc' > $(COMPILED_UI_DIR)/__init__.py
 	$(RCC) -o $(COMPILED_UI_DIR)/resources_rc.py  $<
 
 

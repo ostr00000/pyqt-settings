@@ -2,6 +2,8 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QWidget
 from boltons.cacheutils import cachedproperty
 
+# noinspection PyUnresolvedReferences
+import pyqt_settings.ui
 from pyqt_settings.dialog import createSettingDialogClass
 from pyqt_settings.display_widget_action import DisplayWidgetAction
 
