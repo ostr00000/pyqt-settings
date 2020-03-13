@@ -24,23 +24,23 @@ class MySettings(QSettings):
     NUMBER = IntField('number/test', default=13)
     ControlInt = ControlledField(TEST_ADVANCED_NAME, NUMBER)
 
-    override_LoGer = BoolField('log/override', default=False)
+    override_Logger = BoolField('log/override', default=False)
     LOGGER = StrField('log/level', default='INFO')
     LOGGER.widgetFactory = InitArgWidgetFactory(
         ComboBoxFieldWidget, 'INFO', 'DEBUG')
-    ControlLogger = ControlledField(override_LoGer, LOGGER)
+    ControlLogger = ControlledField(override_Logger, LOGGER)
 
-    text = IntField('test/text')
-    text.widgetFactory = LineEditFieldWidget
+    textText = IntField('test/text')
+    textText.widgetFactory = LineEditFieldWidget
 
-    path = StrField('test/path')
-    path.widgetFactory = InitArgWidgetFactory(
+    test_path = StrField('test/path')
+    test_path.widgetFactory = InitArgWidgetFactory(
         FileDialogFieldWidget,
         ConfigFunc(QFileDialog.setWindowTitle, 'Select any dir'),
         ConfigFunc(QFileDialog.setFileMode, QFileDialog.Directory),
     )
 
-    list_Text = ListField('test/list')
+    List_Text = ListField('test/list')
 
 
 mySettings = MySettings('ostr00000', 'SettingsTest')

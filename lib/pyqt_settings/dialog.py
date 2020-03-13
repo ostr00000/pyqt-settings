@@ -1,4 +1,5 @@
 import logging
+import re
 from typing import Dict
 
 from PyQt5.QtCore import QSettings
@@ -54,7 +55,8 @@ def createSettingDialogClass(settings: QSettings = None):
                     widget.setValue(val)
                     field.widget = widget
 
-                    displayName = settingName.lower().replace('_', ' ').capitalize()
+                    displayName = re.sub('([A-Z]+)', r'_\1', settingName).replace('__', ' ')
+                    displayName = displayName.lower().replace('_', ' ').strip().capitalize()
                     self.layout.addRow(displayName, widget)
                     self._settingName2field[settingName] = field
 
