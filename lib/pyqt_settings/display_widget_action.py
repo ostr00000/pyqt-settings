@@ -20,6 +20,8 @@ class DisplayWidgetAction(QAction, metaclass=QtAbcMeta):  # TODO move
     def onTriggered(self):
         if self.widget is None:
             self.widget = self.createWidget()
+            if isinstance(self.widget, QDialog):
+                self.widget.finished.connect(self.dialog.close)
             self.dialog.layout().addWidget(self.widget)
             self.dialog.show()
         else:
