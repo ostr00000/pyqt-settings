@@ -56,7 +56,10 @@ def loadStateDecFac(fun, key: str = None, settings: SettingProtocol = None,
 
 
 class GeometrySaverMeta(BaseMeta):
-    def __new__(mcs, name, bases, attrs, settings=None, saveName=None):
+    def __new__(mcs, name, bases, attrs,
+                settings: SettingProtocol = None,
+                saveName: str = None):
+
         assert isinstance(settings, SettingProtocol), \
             "setting argument must be provided when class is created"
         assert any(issubclass(base, QWidget) for base in bases)

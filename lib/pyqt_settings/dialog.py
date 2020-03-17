@@ -16,12 +16,18 @@ def createSettingDialogClass(settings: QSettings = None):
     :param settings: where save dialog position
     :return: dialog that create representation of field in setting
     """
+    saveName = '_'.join((
+        settings.organizationName(),
+        settings.applicationName(),
+        settings.objectName(),
+        'SettingDialog',
+    ))
 
     class SettingDialog(
         QDialog,
         metaclass=GeometrySaverMeta.wrap(QDialog),
         settings=settings,
-        saveName=f'{settings.applicationName()}_SettingDialog'
+        saveName=saveName
     ):
 
         def __init__(self, settings_: QSettings, parent: QWidget = None):
@@ -30,8 +36,8 @@ def createSettingDialogClass(settings: QSettings = None):
             self._settingName2field: Dict[str, Field] = {}
 
             self.mainLayout = QVBoxLayout(self)
-            self.layout = QFormLayout()
-            self.mainLayout.addLayout(self.layout)
+            self.subLayout = QFormLayout()
+            self.mainLayout.addLayout(self.subLayout)
 
             self._createButtons()
             self._createWidgets()
@@ -57,7 +63,7 @@ def createSettingDialogClass(settings: QSettings = None):
 
                     displayName = re.sub('([A-Z]+)', r'_\1', settingName).replace('__', ' ')
                     displayName = displayName.lower().replace('_', ' ').strip().capitalize()
-                    self.layout.addRow(displayName, widget)
+                    self.subLayout.addRow(displayName, widget)
                     self._settingName2field[settingName] = field
 
         def onAccepted(self):
