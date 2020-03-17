@@ -1,8 +1,9 @@
 from abc import abstractmethod
 from typing import Optional
 
+from PyQt5.QtCore import QEvent, QObject
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QAction, QWidget, QDialog
+from PyQt5.QtWidgets import QAction, QWidget
 
 from pyqt_settings.metaclass.qt_abc import QtAbcMeta
 
@@ -16,18 +17,19 @@ class DisplayWidgetAction(QAction, metaclass=QtAbcMeta):  # TODO move
     def onTriggered(self):
         if self.widget is None:
             self.widget = self.createWidget()
-            if isinstance(self.widget, QDialog):
-                self.widget.finished.connect(self.onFinished)
-
+            self.widget.installEventFilter(self)
             self.widget.show()
         else:
             self.widget.raise_()
 
-    def onFinished(self):
-        if self.widget is not None:
-            self.widget.setParent(None)
-            self.widget.deleteLater()
+    def eventFilter(self, obj: QObject, event: QEvent) -> bool:
+        if event.type() == QEvent.Close and obj is self.widget:
+            obj.event(event)
+            obj.setParent(None)
+            obj.deleteLater()
             self.widget = None
+            return True
+        return False
 
     @abstractmethod
     def createWidget(self) -> QWidget:
