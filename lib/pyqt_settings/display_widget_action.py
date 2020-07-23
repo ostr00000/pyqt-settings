@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Optional
 
-from PyQt5.QtCore import QEvent, QObject
+from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction, QWidget
 
@@ -17,20 +17,15 @@ class DisplayWidgetAction(QAction, metaclass=QtAbcMeta):  # TODO move
     def onTriggered(self):
         if self.widget is None:
             self.widget = self.createWidget()
-            self.widget.installEventFilter(self)
+            self.widget.destroyed.connect(self.onDestroyed)
+            self.widget.setAttribute(Qt.WA_DeleteOnClose)
             self.widget.show()
         else:
             self.widget.raise_()
 
-    def eventFilter(self, obj: QObject, event: QEvent) -> bool:
-        if event.type() == QEvent.Close and obj is self.widget:
-            obj.event(event)
-            obj.setParent(None)
-            obj.deleteLater()
-            self.widget = None
-            return True
-        return False
+    def onDestroyed(self):
+        self.widget = None
 
     @abstractmethod
     def createWidget(self) -> QWidget:
-        pass
+        raise NotImplementedError
