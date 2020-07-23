@@ -1,8 +1,11 @@
+import logging
 from typing import Union
 
 from PyQt5.QtWidgets import QComboBox
 
 from pyqt_settings.gui_widget.base import FieldWidget
+
+logger = logging.getLogger(__name__)
 
 
 class ComboBoxFieldWidget(QComboBox, FieldWidget[str]):
@@ -16,7 +19,11 @@ class ComboBoxFieldWidget(QComboBox, FieldWidget[str]):
 
     def setValue(self, value: Union[str, int]):
         if isinstance(value, str):
-            index = self.items.index(value)
+            try:
+                index = self.items.index(value)
+            except ValueError:
+                logger.error('Unexpected string value "{}"'.format(value))
+                index = 0
         elif isinstance(value, int):
             index = value
         else:
