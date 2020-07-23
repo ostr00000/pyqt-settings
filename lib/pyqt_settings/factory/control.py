@@ -1,7 +1,9 @@
+from typing import Callable
+
 from pyqt_settings.field.base import Field
 from pyqt_settings.field.boolean import BoolField
 from pyqt_settings.gui_widget.base import FieldWidget
-from pyqt_settings.gui_widget.check_box import CheckBoxFieldWidget
+from pyqt_settings.setting_creator import SettingCreator
 
 
 class ControlWidgetFactory:
@@ -10,12 +12,18 @@ class ControlWidgetFactory:
         self.factory = controlled.widgetFactory
         controlled.widgetFactory = None
 
-    def setControlledWidget(self, controlledWidget: FieldWidget):
-        self.factory = controlledWidget
+        self.controlledWidget: FieldWidget
+        self.oldSetCreator: Callable[[SettingCreator], None]
 
     def __call__(self) -> FieldWidget:
-        widget = self.factory()
-        w: CheckBoxFieldWidget = self.supervisor.widget
-        w.stateChanged.connect(widget.setEnabled)
-        widget.setEnabled(w.isChecked())
-        return widget
+        controlledWidget = self.factory()
+        oldSetCreator = controlledWidget.setCreator
+
+        def setCreator(creator: SettingCreator):
+            oldSetCreator(creator)
+            supervisorWidget = creator.getWidgetFromField(self.supervisor)
+            supervisorWidget.stateChanged.connect(controlledWidget.setEnabled)
+            controlledWidget.setEnabled(supervisorWidget.isChecked())
+
+        controlledWidget.setCreator = setCreator
+        return controlledWidget
