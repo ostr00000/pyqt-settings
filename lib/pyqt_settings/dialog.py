@@ -45,7 +45,8 @@ def createSettingDialogClass(settings: QSettings = None):
 
         def _createWidgets(self):
             for settingName, field, fieldWidget in self.settingsCreator:
-                displayName = re.sub('([A-Z]+)', r'_\1', settingName).replace('__', ' ')
+                displayName = settingName.replace('LL', '[').replace('JJ', ']')
+                displayName = re.sub('([A-Z]+)', r'_\1', displayName).replace('__', ' ')
                 displayName = displayName.lower().replace('_', ' ').strip().capitalize()
                 self.subLayout.addRow(displayName, fieldWidget)
 
