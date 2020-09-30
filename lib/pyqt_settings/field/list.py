@@ -29,7 +29,7 @@ class ListField(Field[List], Generic[S]):
             return [self.castType(v) for v in val]
         except (TypeError, ValueError) as error:
             logger.error(error)
-            return []
+            return self.default
 
     def __set__(self, instance: QSettings, value):
         instance.setValue(self.key, value)

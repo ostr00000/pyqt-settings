@@ -15,6 +15,8 @@ class Field(Generic[T]):
 
     def __init__(self, key: str, default: T = None, type_: Type[T] = None):
         self.key = key
+        if type_ is not None:
+            default = type_(default)
         self.default = default
         self.type = type_
         self.widgetFactory: Optional[Callable[[], FieldWidget]] = None
