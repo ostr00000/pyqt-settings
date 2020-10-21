@@ -1,9 +1,7 @@
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QWidget
+from PyQt5.QtWidgets import QDialog
 from boltons.cacheutils import cachedproperty
 
-# noinspection PyUnresolvedReferences
-import pyqt_settings.ui
 from pyqt_settings.dialog import createSettingDialogClass
 from pyqt_settings.display_widget_action import DisplayWidgetAction
 
@@ -14,7 +12,7 @@ class SettingDialogAction(DisplayWidgetAction):
         super().__init__(icon=icon, text=text, parent=parent)
         self.settings = settings
 
-    def createWidget(self) -> QWidget:
+    def createWidget(self) -> QDialog:
         return self.settingDialogClass(self.settings, self.parent())
 
     @cachedproperty
