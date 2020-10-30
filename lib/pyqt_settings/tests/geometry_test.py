@@ -1,7 +1,7 @@
 from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog, QVBoxLayout, QDialogButtonBox
 
-from pyqt_settings.metaclass.geometry_saver import GeometrySaverMeta
+from pyqt_utils.metaclass.geometry_saver import GeometrySaverMeta
 
 
 def main():

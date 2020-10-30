@@ -4,8 +4,8 @@ import re
 from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QVBoxLayout, QWidget
 
-from pyqt_settings.metaclass.geometry_saver import GeometrySaverMeta
 from pyqt_settings.setting_creator import SettingCreator
+from pyqt_utils.metaclass.geometry_saver import GeometrySaverMeta
 
 logger = logging.getLogger(__name__)
 
