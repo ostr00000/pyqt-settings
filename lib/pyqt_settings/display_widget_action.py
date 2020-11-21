@@ -7,7 +7,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction, QWidget
 
 from pyqt_utils.metaclass.qt_abc import QtAbcMeta
-from pyqt_utils.python.common_decorators import saveRun
+from pyqt_utils.python.common_decorators import safeRun
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +18,7 @@ class DisplayWidgetAction(QAction, metaclass=QtAbcMeta):  # TODO move
         self.widget: Optional[QWidget] = None
         self.triggered.connect(self.onTriggered)
 
-    @saveRun
+    @safeRun
     def onTriggered(self):
         if self.widget is None:
             self.widget = self.createWidget()
