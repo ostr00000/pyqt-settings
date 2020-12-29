@@ -22,7 +22,13 @@ class ControlledField(Field[Field_T]):
     def __get__(self, instance: QSettings, owner: Type[QSettings]) -> Union[Field_T]:
         if instance is None:
             return self
-        return self.controlled.__get__(instance, owner)
+        if self.isControlled(instance, owner):
+            return self.controlled.__get__(instance, owner)
+        else:
+            return self.controlled.default
 
     def __set__(self, instance: QSettings, value: Field_T):
-        self.controlled.__set__(instance, value)
+        if self.isControlled(instance):
+            self.controlled.__set__(instance, value)
+            return True
+        return False
