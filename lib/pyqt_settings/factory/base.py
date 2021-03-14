@@ -23,9 +23,6 @@ class WidgetFactory:
 
 
 class InitArgWidgetFactory(WidgetFactory):
-    def __init__(self, class_, *args):
-        """Convenience factory.
-        :param class_: widget class
-        :param args: argument for widget __init__
-        """
-        super().__init__(InitFunc(class_, *args))
+    def __init__(self, class_, *args, **kwargs):
+        """Convenience factory where all arguments will be passed to class_ init function."""
+        super().__init__(InitFunc(class_, *args, **kwargs))

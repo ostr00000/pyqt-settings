@@ -13,8 +13,8 @@ from pyqt_settings.field.integer import IntField
 from pyqt_settings.field.list import ListField
 from pyqt_settings.field.string import StrField
 from pyqt_settings.gui_widget.combo_box import ComboBoxFieldWidget
-from pyqt_settings.gui_widget.file_dialog import FileDialogFieldWidget
 from pyqt_settings.gui_widget.line_edit import LineEditFieldWidget
+from pyqt_settings.gui_widget.path_line_edit import PathLineEdit
 
 
 class MySettings(QSettings):
@@ -35,9 +35,9 @@ class MySettings(QSettings):
 
     test_path = StrField('test/path')
     test_path.widgetFactory = InitArgWidgetFactory(
-        FileDialogFieldWidget,
-        ConfigFunc(QFileDialog.setWindowTitle, 'Select any dir'),
-        ConfigFunc(QFileDialog.setFileMode, QFileDialog.Directory),
+        PathLineEdit, configFunctions=(
+            ConfigFunc(QFileDialog.setWindowTitle, 'Select any dir'),
+            ConfigFunc(QFileDialog.setFileMode, QFileDialog.Directory))
     )
 
     List_Text = ListField('test/list')
