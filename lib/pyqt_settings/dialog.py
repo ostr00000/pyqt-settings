@@ -1,10 +1,9 @@
 import logging
-import re
 
 from PyQt5.QtCore import QSettings
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QFormLayout, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QWidget, QFormLayout
 
-from pyqt_settings.setting_creator import SettingCreator
+from pyqt_settings.field.base import Field
 from pyqt_utils.metaclass.geometry_saver import GeometrySaverMeta
 
 logger = logging.getLogger(__name__)
@@ -31,24 +30,27 @@ def createSettingDialogClass(settings: QSettings = None):
 
         def __init__(self, settings_: QSettings, parent: QWidget = None):
             super().__init__(parent)
-            self.settingsCreator = SettingCreator(settings_)
-
-            self.subLayout = QFormLayout()
-            self._createWidgets()
+            self._settings = settings_
 
             self.mainLayout = QVBoxLayout(self)
+            self.subLayout = QFormLayout(self)
             self.mainLayout.addLayout(self.subLayout)
-            self._createButtons()
 
-            self.accepted.connect(self.settingsCreator.save)
-            self.finished.connect(self.settingsCreator.clear)
+            self._createWidgets()
+            self._createButtons()
+            self.accepted.connect(self.save)
 
         def _createWidgets(self):
-            for settingName, field, fieldWidget in self.settingsCreator:
-                displayName = settingName.replace('_LL', '_[').replace('JJ', ']')
-                displayName = re.sub('([A-Z]+)', r'_\1', displayName).replace('__', ' ')
-                displayName = displayName.lower().replace('_', ' ').strip().capitalize()
-                self.subLayout.addRow(displayName, fieldWidget)
+            for field in self._genSettingFields():
+                if not isinstance(field, Field):
+                    continue
+
+                if widget := field.getWidget(self._settings):
+                    self.subLayout.addRow(field.displayName, widget)
+
+        def _genSettingFields(self):
+            for field in type(self._settings).__dict__.values():
+                yield field
 
         def _createButtons(self):
             self.buttonBox = QDialogButtonBox(
@@ -58,5 +60,27 @@ def createSettingDialogClass(settings: QSettings = None):
             self.buttonBox.rejected.connect(self.reject)
 
             self.mainLayout.addWidget(self.buttonBox)
+
+        def save(self):
+            changed = False
+            for field in self._genSettingFields():
+                if not isinstance(field, Field):
+                    continue
+
+                widget = field.getWidget(self._settings, init=False)
+                newValue = widget.getValue()
+                oldValue = field.__get__(self._settings, type(self._settings))
+
+                if newValue == oldValue:
+                    continue
+
+                if field.__set__(self._settings, newValue) is False:
+                    continue
+
+                changed = True
+                logger.debug(f"Set {field.name} = {newValue}")
+
+            if changed:
+                self.settings.sync()
 
     return SettingDialog

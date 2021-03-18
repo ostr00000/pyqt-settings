@@ -1,29 +1,26 @@
-from typing import Callable
-
 from pyqt_settings.field.base import Field
 from pyqt_settings.field.boolean import BoolField
 from pyqt_settings.gui_widget.base import FieldWidget
-from pyqt_settings.setting_creator import SettingCreator
 
 
 class ControlWidgetFactory:
     def __init__(self, supervisor: BoolField, controlled: Field):
         self.supervisor = supervisor
+        self.controlled = controlled
         self.factory = controlled.widgetFactory
         controlled.widgetFactory = None
 
-        self.controlledWidget: FieldWidget
-        self.oldSetCreator: Callable[[SettingCreator], None]
-
     def __call__(self) -> FieldWidget:
         controlledWidget = self.factory()
-        oldSetCreator = controlledWidget.setCreator
+        supervisorWidget = self.supervisor.getWidget(None)
 
-        def setCreator(creator: SettingCreator):
-            oldSetCreator(creator)
-            supervisorWidget = creator.getWidgetFromField(self.supervisor)
-            supervisorWidget.stateChanged.connect(controlledWidget.setEnabled)
+        try:
             controlledWidget.setEnabled(supervisorWidget.isChecked())
+        except AttributeError:
+            pass
+        try:
+            supervisorWidget.stateChanged.connect(controlledWidget.setEnabled)
+        except AttributeError:
+            pass
 
-        controlledWidget.setCreator = setCreator
         return controlledWidget
