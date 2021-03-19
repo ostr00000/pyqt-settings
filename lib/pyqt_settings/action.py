@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QDialog
 from boltons.cacheutils import cachedproperty
 
 from pyqt_settings.dialog import createSettingDialogClass
-from pyqt_settings.display_widget_action import DisplayWidgetAction
+from pyqt_utils.qobjects.display_widget_action import DisplayWidgetAction
 
 
 class SettingDialogAction(DisplayWidgetAction):

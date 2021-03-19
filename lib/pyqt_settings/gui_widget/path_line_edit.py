@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QCompleter, QFileDialog, QWidget, QFileSystemModel
 from pyqt_settings.factory.base import ConfigFunc
 from pyqt_settings.gui_widget.base import FieldWidget
 from pyqt_settings.ui.ui_path_widget import Ui_PathWidget
-from pyqt_utils.ui_base_widget import BaseWidget
+from pyqt_utils.widgets.base_widget import BaseWidget
 
 logger = logging.getLogger(__name__)
 

@@ -4,7 +4,7 @@ from typing import List, Union
 from PyQt5.QtWidgets import QCheckBox, QSpinBox, QLineEdit, QComboBox
 
 from pyqt_settings.gui_widget.base import FieldWidget
-from pyqt_settings.widgets.space_line_edit import SpaceLineEdit
+from pyqt_utils.widgets.space_line_edit import SpaceLineEdit
 
 logger = logging.getLogger(__name__)
 
