@@ -33,23 +33,23 @@ def createSettingDialogClass(settings: QSettings = None):
             self._settings = settings_
 
             self.mainLayout = QVBoxLayout(self)
-            self.subLayout = QFormLayout(self)
+            self.subLayout = QFormLayout()
             self.mainLayout.addLayout(self.subLayout)
 
-            self._createWidgets()
+            self.widgetToField = dict(self._createWidgets())
             self._createButtons()
             self.accepted.connect(self.save)
 
         def _createWidgets(self):
             for field in self._genSettingFields():
-                if not isinstance(field, Field):
-                    continue
-
-                if widget := field.getWidget(self._settings):
+                if widget := field.createWidget(self._settings):
                     self.subLayout.addRow(field.displayName, widget)
+                    yield widget, field
 
         def _genSettingFields(self):
             for field in type(self._settings).__dict__.values():
+                if not isinstance(field, Field):
+                    continue
                 yield field
 
         def _createButtons(self):
@@ -63,11 +63,7 @@ def createSettingDialogClass(settings: QSettings = None):
 
         def save(self):
             changed = False
-            for field in self._genSettingFields():
-                if not isinstance(field, Field):
-                    continue
-
-                widget = field.getWidget(self._settings, init=False)
+            for widget, field in self.widgetToField.items():
                 newValue = widget.getValue()
                 oldValue = field.__get__(self._settings, type(self._settings))
 

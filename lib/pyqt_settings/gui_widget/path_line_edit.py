@@ -4,7 +4,7 @@ from typing import Iterable
 from PyQt5.QtCore import Qt, QDir
 from PyQt5.QtWidgets import QCompleter, QFileDialog, QWidget, QFileSystemModel
 
-from pyqt_settings.factory.config_fun import ConfigFunc
+from pyqt_settings.factory.base import ConfigFunc
 from pyqt_settings.gui_widget.base import FieldWidget
 from pyqt_settings.ui.ui_path_widget import Ui_PathWidget
 from pyqt_utils.ui_base_widget import BaseWidget

@@ -1,28 +1,38 @@
-from typing import Callable, Union
+from PyQt5.QtCore import QSettings
 
-from pyqt_settings.factory.config_fun import ConfigFunc
-from pyqt_settings.factory.init_fun import InitFunc
+from pyqt_settings.field.base import WidgetFactory_t, Field
 from pyqt_settings.gui_widget.base import FieldWidget
 
 
-class WidgetFactory:
-    def __init__(self, initFunc: Union[InitFunc, Callable[[], FieldWidget]] = None,
-                 *configFuncs: ConfigFunc):
-        """Factory create widget using InitFunc and ConfigFunc
-        :param initFunc: function create widget, may be class
-        :param configFuncs: functions that set desired properties to widget
-        """
-        self.initFunc = initFunc
-        self.configFuncs = list(configFuncs)
+class ConfigFunc:
+    def __init__(self, fun, *args, **kwargs):
+        self.fun = fun
+        self.args = args
+        self.kwargs = kwargs
 
-    def __call__(self) -> FieldWidget:
+    def __call__(self, widget=None):
+        if widget is None:
+            return self.fun(*self.args, **self.kwargs)
+        else:
+            self.fun(widget, *self.args, **self.kwargs)
+
+
+class WidgetFactory:
+    def __init__(self, initFunc: WidgetFactory_t, *args, **kwargs):
+        """Factory saves initFunc and parameters and
+        create widget when this object is called.
+        :param initFunc: function that create widget, may be class
+        """
+        self.initFunc = ConfigFunc(initFunc, *args, **kwargs)
+        self.configFunctions: list[ConfigFunc] = []
+
+    def addConfig(self, configFunction, *args, **kwargs):
+        """Save additional configuration functions and their argument to
+        call when constructing a new object."""
+        self.configFunctions.append(ConfigFunc(configFunction, *args, **kwargs))
+
+    def __call__(self, settings: QSettings, field: Field) -> FieldWidget:
         widget = self.initFunc()
-        for configFunc in self.configFuncs:
+        for configFunc in self.configFunctions:
             configFunc(widget)
         return widget
-
-
-class InitArgWidgetFactory(WidgetFactory):
-    def __init__(self, class_, *args, **kwargs):
-        """Convenience factory where all arguments will be passed to class_ init function."""
-        super().__init__(InitFunc(class_, *args, **kwargs))

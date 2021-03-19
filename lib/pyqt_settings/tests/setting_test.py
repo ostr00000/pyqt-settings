@@ -5,16 +5,12 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QVBoxLayout, QWidget, QPu
     QFileDialog
 
 from pyqt_settings.dialog import createSettingDialogClass
-from pyqt_settings.factory.base import InitArgWidgetFactory
-from pyqt_settings.factory.config_fun import ConfigFunc
-from pyqt_settings.field.boolean import BoolField
+from pyqt_settings.factory.base import WidgetFactory, ConfigFunc
 from pyqt_settings.field.control import ControlledField
-from pyqt_settings.field.integer import IntField
 from pyqt_settings.field.list import ListField
-from pyqt_settings.field.string import StrField
-from pyqt_settings.gui_widget.combo_box import ComboBoxFieldWidget
-from pyqt_settings.gui_widget.line_edit import LineEditFieldWidget
+from pyqt_settings.field.simple import StrField, IntField, BoolField
 from pyqt_settings.gui_widget.path_line_edit import PathLineEdit
+from pyqt_settings.gui_widget.simple import LineEditFieldWidget, ComboBoxFieldWidget
 
 
 class MySettings(QSettings):
@@ -26,18 +22,18 @@ class MySettings(QSettings):
 
     override_Logger = BoolField('log/override', default=False)
     LOGGER = StrField('log/level', default='INFO')
-    LOGGER.widgetFactory = InitArgWidgetFactory(
+    LOGGER.widgetFactory = WidgetFactory(
         ComboBoxFieldWidget, 'INFO', 'DEBUG')
     ControlLogger = ControlledField(override_Logger, LOGGER)
 
     textText = IntField('test/text')
-    textText.widgetFactory = LineEditFieldWidget
+    textText.widgetFactory = WidgetFactory(LineEditFieldWidget)
 
     test_path = StrField('test/path')
-    test_path.widgetFactory = InitArgWidgetFactory(
-        PathLineEdit, configFunctions=(
+    test_path.widgetFactory = WidgetFactory(
+        PathLineEdit, configFunctions=[
             ConfigFunc(QFileDialog.setWindowTitle, 'Select any dir'),
-            ConfigFunc(QFileDialog.setFileMode, QFileDialog.Directory))
+            ConfigFunc(QFileDialog.setFileMode, QFileDialog.Directory)]
     )
 
     List_Text = ListField('test/list')

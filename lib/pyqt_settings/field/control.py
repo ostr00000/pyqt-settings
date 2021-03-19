@@ -4,7 +4,7 @@ from PyQt5.QtCore import QSettings
 
 from pyqt_settings.factory.control import ControlWidgetFactory
 from pyqt_settings.field.base import Field
-from pyqt_settings.field.boolean import BoolField
+from pyqt_settings.field.simple import BoolField
 
 Field_T = TypeVar('Field_T', bound=Field)
 

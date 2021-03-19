@@ -4,7 +4,7 @@ from typing import Type
 
 from PyQt5.QtCore import QSettings
 
-from pyqt_settings.field.string import StrField
+from pyqt_settings.field.simple import StrField
 from pyqt_utils.python.json_serializable import deepMapSequence, fromJson
 
 logger = logging.getLogger(__name__)

@@ -5,47 +5,44 @@ import re
 from functools import cached_property
 from typing import TypeVar, Generic, Type, Union, Optional, Callable
 
-from PyQt5.QtCore import QSettings
+from PyQt5.QtCore import QSettings, pyqtProperty, pyqtSignal
 from PyQt5.QtWidgets import QWidget, QFormLayout
 
 from pyqt_settings.gui_widget.base import FieldWidget
 
 logger = logging.getLogger(__name__)
 T = TypeVar('T')
+WidgetFactory_t = Union[
+    Callable[[QSettings, 'Field'], FieldWidget],
+    Type[FieldWidget],
+]
 
 
-class Field(Generic[T]):
+class Field(pyqtProperty, Generic[T]):
+    valueChanged = pyqtSignal(object)
 
     def __init__(self, key: str, default: T = None, type_: Type[T] = None):
-        self.key = key
+        super().__init__(object if type_ is None else type_)
         if type_ is not None:
             default = type_(default)
+        self.key = key
         self.default = default
-        self.type = type_
-        self.widgetFactory: Optional[Callable[[], FieldWidget]] = None
-
+        self.widgetFactory: Optional[WidgetFactory_t] = None
         self.name = None
-        self.owner = None
 
     def __set_name__(self, owner: QSettings, name: str):
-        self.owner = owner
         self.name = name
 
-    def getWidget(self, instance: Optional[QSettings], init=True) -> Optional[FieldWidget]:
+    def createWidget(self, instance: QSettings) -> Optional[FieldWidget]:
         if self.widgetFactory is None:
             return None
-        else:
-            try:
-                widget = self.widgetFactory()
-            except TypeError:  # temporary solution
-                widget = self.widgetFactory(instance)  # noqa
 
-        if init and instance is not None:
-            widget.setValue(self.__get__(instance, self.owner))
+        widget = self.widgetFactory(instance, self)
+        widget.setValue(self.__get__(instance, type(instance)))
         return widget
 
-    def getWidgetWithLabel(self, instance: QSettings, parent=None) -> Optional[QWidget]:
-        if not (widget := self.getWidget(instance)):
+    def createWidgetWithLabel(self, instance: QSettings, parent=None) -> Optional[QWidget]:
+        if not (widget := self.createWidget(instance)):
             return
         aggr = QWidget(parent)
         layout = QFormLayout(aggr)

@@ -5,21 +5,22 @@ from typing import Type, List, Generic, TypeVar, Union, Callable
 
 from PyQt5.QtCore import QSettings
 
+from pyqt_settings.factory.base import WidgetFactory
 from pyqt_settings.field.base import Field
-from pyqt_settings.gui_widget.list_line_edit import SpaceLineFieldWidget
+from pyqt_settings.gui_widget.simple import SpaceLineFieldWidget
 
 logger = logging.getLogger(__name__)
 S = TypeVar('S')
 
 
 class ListField(Field[List], Generic[S]):
-
+    """Field represent python list with values of type castType."""
     def __init__(self, key, default=None, castType: Callable[[str], S] = str):
         if default is None:
             default = []
         super().__init__(key, default, list)
         self.castType = castType
-        self.widgetFactory = SpaceLineFieldWidget
+        self.widgetFactory = WidgetFactory(SpaceLineFieldWidget)
 
     def __get__(self, instance: QSettings, owner: Type[QSettings]) -> Union[ListField, List[S]]:
         if instance is None:

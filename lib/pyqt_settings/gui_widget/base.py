@@ -8,9 +8,12 @@ T = TypeVar('T')
 
 
 class FieldWidget(QWidget, Generic[T]):
+    """Abstract class represent value from settings as widget"""
 
     def getValue(self) -> T:
+        """Return current settings value."""
         raise NotImplementedError
 
     def setValue(self, value: T):
+        """The value may comes from different source than settings."""
         raise NotImplementedError
