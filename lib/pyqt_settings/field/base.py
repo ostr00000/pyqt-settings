@@ -5,8 +5,8 @@ import re
 from functools import cached_property
 from typing import TypeVar, Generic, Type, Union, Optional, Callable
 
-from PyQt5.QtCore import QSettings, pyqtProperty, pyqtSignal
-from PyQt5.QtWidgets import QWidget, QFormLayout
+from PyQt5.QtCore import QSettings, pyqtProperty, pyqtSignal, QObject
+from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton
 
 from pyqt_settings.gui_widget.base import FieldWidget
 
@@ -18,8 +18,40 @@ WidgetFactory_t = Union[
 ]
 
 
-class Field(pyqtProperty, Generic[T]):
+class FieldWidgetWithLabel(QWidget):
+    def __init__(self, fieldWidget: FieldWidget, label: str,
+                 layoutType=QHBoxLayout, parent=None):
+        super().__init__(parent)
+        self.fieldFidget = fieldWidget
+        self.button = QPushButton('Save')
+
+        layout = layoutType(self)
+        layout.setContentsMargins(1, 1, 1, 1)
+        layout.addWidget(QLabel(label + ':'))
+        layout.addWidget(fieldWidget)
+        layout.addWidget(self.button)
+
+    def getValue(self):
+        return self.fieldFidget.getValue()
+
+
+class SigWrapper(QObject):
     valueChanged = pyqtSignal(object)
+
+    def connect(self, fun):
+        self.valueChanged.connect(fun)
+
+    def disconnect(self, fun=None):
+        self.valueChanged.disconnect(fun)
+
+    def emit(self, value):
+        self.valueChanged.emit(value)
+
+
+class Field(pyqtProperty, Generic[T]):
+    @cached_property
+    def valueChanged(self):
+        return SigWrapper()
 
     def __init__(self, key: str, default: T = None, type_: Type[T] = None):
         super().__init__(object if type_ is None else type_)
@@ -39,16 +71,16 @@ class Field(pyqtProperty, Generic[T]):
 
         widget = self.widgetFactory(instance, self)
         widget.setValue(self.__get__(instance, type(instance)))
+        self.valueChanged.connect(widget.setValue)
         return widget
 
-    def createWidgetWithLabel(self, instance: QSettings, parent=None) -> Optional[QWidget]:
+    def createWidgetWithLabel(
+            self, instance: QSettings, parent=None, **kwargs
+    ) -> Optional[FieldWidgetWithLabel]:
         if not (widget := self.createWidget(instance)):
             return
-        aggr = QWidget(parent)
-        layout = QFormLayout(aggr)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.addRow(self.displayName + ':', widget)
-        return aggr
+
+        return FieldWidgetWithLabel(widget, self.displayName, parent=parent, **kwargs)
 
     @cached_property
     def displayName(self):
@@ -70,3 +102,4 @@ class Field(pyqtProperty, Generic[T]):
 
     def __set__(self, instance: QSettings, value: T):
         instance.setValue(self.key, value)
+        self.valueChanged.emit(value)
