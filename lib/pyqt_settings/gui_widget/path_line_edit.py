@@ -1,7 +1,7 @@
 import logging
 from typing import Iterable
 
-from PyQt5.QtCore import Qt, QDir
+from PyQt5.QtCore import Qt, QDir, pyqtSignal
 from PyQt5.QtWidgets import QCompleter, QFileDialog, QWidget, QFileSystemModel
 
 from pyqt_settings.factory.base import ConfigFunc
@@ -14,6 +14,7 @@ logger = logging.getLogger(__name__)
 
 class PathLineEdit(Ui_PathWidget, BaseWidget, FieldWidget[str], QWidget):
     """Use kwargs 'configFunctions' to pass iterable with ConfigFunc for path dialog."""
+    valueChanged = pyqtSignal(str)
 
     def __pre_init__(self, *args, configFunctions: Iterable[ConfigFunc] = (), **kwargs):
         super().__pre_init__(*args, **kwargs)
@@ -30,6 +31,7 @@ class PathLineEdit(Ui_PathWidget, BaseWidget, FieldWidget[str], QWidget):
         self.lineEdit.setCompleter(self.completer)
 
         self.toolButton.clicked.connect(self.onToolButtonClicked)
+        self.lineEdit.textChanged.connect(self.valueChanged)
 
     def getValue(self) -> str:
         return self.lineEdit.text()

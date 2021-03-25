@@ -18,12 +18,45 @@ WidgetFactory_t = Union[
 ]
 
 
+class DirtyController:
+    def __init__(self, widget: FieldWidget, field: Field):
+        self.widget = widget
+        self.startValue = widget.getValue()
+        try:
+            widget.valueChanged.connect(self._setDirty)
+        except AttributeError:
+            pass
+        field.valueChanged.connect(self.resetStartValue)
+
+    def resetStartValue(self, newStartValue):
+        self.startValue = newStartValue
+        self._setDirty()
+
+    def _setDirty(self):
+        curValue = self.widget.getValue()
+        if curValue == self.startValue:
+            toolTip, style = '', ''
+        else:
+            style = 'border: 2px solid orange;'
+            toolTip = 'Unsaved changes'
+        self.widget.setStyleSheet(style)
+        self.widget.setToolTip(toolTip)
+
+
 class FieldWidgetWithLabel(QWidget):
     def __init__(self, fieldWidget: FieldWidget, label: str,
-                 layoutType=QHBoxLayout, parent=None):
+                 layoutType=QHBoxLayout, field: Field = None,
+                 settings: QSettings = None, connectSaveButton=True,
+                 parent=None):
         super().__init__(parent)
-        self.fieldFidget = fieldWidget
+        self.fieldWidget = fieldWidget
+        self.field = field
+        self.dirty = DirtyController(fieldWidget, field)
+        self.settings = settings
         self.button = QPushButton('Save')
+
+        if field and connectSaveButton:
+            self.button.clicked.connect(self.onButtonClicked)
 
         layout = layoutType(self)
         layout.setContentsMargins(1, 1, 1, 1)
@@ -31,8 +64,14 @@ class FieldWidgetWithLabel(QWidget):
         layout.addWidget(fieldWidget)
         layout.addWidget(self.button)
 
-    def getValue(self):
-        return self.fieldFidget.getValue()
+    def onButtonClicked(self):
+        value = self.fieldWidget.getValue()
+        self.field.__set__(self.settings, value)
+
+    def replaceWidget(self, placeHolder: QWidget):
+        layout = placeHolder.parentWidget().layout()
+        layout.replaceWidget(placeHolder, self)
+        placeHolder.deleteLater()
 
 
 class SigWrapper(QObject):
@@ -76,11 +115,12 @@ class Field(pyqtProperty, Generic[T]):
 
     def createWidgetWithLabel(
             self, instance: QSettings, parent=None, **kwargs
-    ) -> Optional[FieldWidgetWithLabel]:
-        if not (widget := self.createWidget(instance)):
-            return
-
-        return FieldWidgetWithLabel(widget, self.displayName, parent=parent, **kwargs)
+    ) -> FieldWidgetWithLabel:
+        widget = self.createWidget(instance)
+        widgetWithLabel = FieldWidgetWithLabel(
+            widget, self.displayName, field=self,
+            settings=instance, parent=parent, **kwargs)
+        return widgetWithLabel
 
     @cached_property
     def displayName(self):
