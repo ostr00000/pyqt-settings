@@ -77,6 +77,6 @@ def createSettingDialogClass(settings: QSettings = None):
                 logger.debug(f"Set {field.name} = {newValue}")
 
             if changed:
-                self.settings.sync()
+                self._settings.sync()
 
     return SettingDialog
