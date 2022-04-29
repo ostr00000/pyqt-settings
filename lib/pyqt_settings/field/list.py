@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Type, List, Generic, TypeVar, Union, Callable
+from typing import Generic, TypeVar, Callable
 
 from PyQt5.QtCore import QSettings
 
@@ -13,8 +13,9 @@ logger = logging.getLogger(__name__)
 S = TypeVar('S')
 
 
-class ListField(Field[List], Generic[S]):
+class ListField(Field[list], Generic[S]):
     """Field represent python list with values of type castType."""
+
     def __init__(self, key, default=None, castType: Callable[[str], S] = str):
         if default is None:
             default = []
@@ -22,7 +23,7 @@ class ListField(Field[List], Generic[S]):
         self.castType = castType
         self.widgetFactory = WidgetFactory(SpaceLineFieldWidget)
 
-    def __get__(self, instance: QSettings, owner: Type[QSettings]) -> Union[ListField, List[S]]:
+    def __get__(self, instance: QSettings, owner: type[QSettings]) -> ListField | list[S]:
         if instance is None:
             return self
         try:

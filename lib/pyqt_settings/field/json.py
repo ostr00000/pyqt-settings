@@ -1,6 +1,5 @@
 import json
 import logging
-from typing import Type
 
 from PyQt5.QtCore import QSettings
 
@@ -20,7 +19,7 @@ class JsonField(StrField):
             assert callable(jsonSerializeFun)
             self.jsonSerializeFun = jsonSerializeFun
 
-    def __get__(self, instance: QSettings, owner: Type[QSettings]):
+    def __get__(self, instance: QSettings, owner: type[QSettings]):
         if instance is None:
             return self
 

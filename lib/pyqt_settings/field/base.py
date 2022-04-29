@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 import re
 from functools import cached_property
-from typing import TypeVar, Generic, Type, Union, Optional, Callable
+from typing import TypeVar, Generic, Union, Callable
 
 from PyQt5.QtCore import QSettings, pyqtProperty, pyqtSignal, QObject
 from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton
@@ -14,7 +14,7 @@ logger = logging.getLogger(__name__)
 T = TypeVar('T')
 WidgetFactory_t = Union[
     Callable[[QSettings, 'Field'], FieldWidget],
-    Type[FieldWidget],
+    type[FieldWidget],
 ]
 
 
@@ -92,19 +92,19 @@ class Field(pyqtProperty, Generic[T]):
     def valueChanged(self):
         return SigWrapper()
 
-    def __init__(self, key: str, default: T = None, type_: Type[T] = None):
+    def __init__(self, key: str, default: T = None, type_: type[T] = None):
         super().__init__(object if type_ is None else type_)
         if type_ is not None:
             default = type_(default)
         self.key = key
         self.default = default
-        self.widgetFactory: Optional[WidgetFactory_t] = None
+        self.widgetFactory: WidgetFactory_t | None = None
         self.name = None
 
     def __set_name__(self, owner: QSettings, name: str):
         self.name = name
 
-    def createWidget(self, instance: QSettings) -> Optional[FieldWidget]:
+    def createWidget(self, instance: QSettings) -> FieldWidget | None:
         if self.widgetFactory is None:
             return None
 
@@ -131,7 +131,7 @@ class Field(pyqtProperty, Generic[T]):
         dn = dn.lower().replace('_', ' ').strip().capitalize()
         return dn
 
-    def __get__(self, instance: QSettings, owner: Type[QSettings]) -> Union[T, Field]:
+    def __get__(self, instance: QSettings, owner: type[QSettings]) -> T | Field:
         if instance is None:
             return self
         try:

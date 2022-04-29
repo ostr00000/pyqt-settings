@@ -1,5 +1,4 @@
 import logging
-from typing import List, Union
 
 from PyQt5.QtWidgets import QCheckBox, QSpinBox, QLineEdit, QComboBox
 
@@ -35,12 +34,12 @@ class LineEditFieldWidget(QLineEdit, FieldWidget[str]):
         self.setText(str(value))
 
 
-class SpaceLineFieldWidget(SpaceLineEdit, FieldWidget[List]):
-    def getValue(self) -> List:
+class SpaceLineFieldWidget(SpaceLineEdit, FieldWidget[list]):
+    def getValue(self) -> list:
         values = self.getValues()
         return values
 
-    def setValue(self, value: List):
+    def setValue(self, value: list):
         self.setValues(value)
 
 
@@ -53,12 +52,12 @@ class ComboBoxFieldWidget(QComboBox, FieldWidget[str]):
     def getValue(self):
         return self.currentText()
 
-    def setValue(self, value: Union[str, int]):
+    def setValue(self, value: str | int):
         if isinstance(value, str):
             try:
                 index = self.items.index(value)
             except ValueError:
-                logger.error('Unexpected string value "{}"'.format(value))
+                logger.error(f'Unexpected string value "{value}"')
                 index = 0
         elif isinstance(value, int):
             index = value

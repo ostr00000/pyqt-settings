@@ -1,4 +1,4 @@
-from typing import Type, TypeVar, Union
+from typing import TypeVar
 
 from PyQt5.QtCore import QSettings
 
@@ -19,7 +19,7 @@ class ControlledField(Field[Field_T]):
     def isControlled(self, instance, owner=QSettings):
         return self.supervisor.__get__(instance, owner)
 
-    def __get__(self, instance: QSettings, owner: Type[QSettings]) -> Union[Field_T]:
+    def __get__(self, instance: QSettings, owner: type[QSettings]) -> Field_T:
         if instance is None:
             return self
         if self.isControlled(instance, owner):
