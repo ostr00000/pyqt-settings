@@ -14,7 +14,7 @@ class ConfigFunc:
         if widget is None:
             return self.fun(*self.args, **self.kwargs)
         else:
-            self.fun(widget, *self.args, **self.kwargs)
+            return self.fun(widget, *self.args, **self.kwargs)
 
 
 class WidgetFactory:

@@ -3,7 +3,7 @@ import logging
 from PyQt5.QtWidgets import QCheckBox, QSpinBox, QLineEdit, QComboBox
 
 from pyqt_settings.gui_widget.base import FieldWidget
-from pyqt_utils.widgets.space_line_edit import SpaceLineEdit
+from pyqt_utils.widgets.multi_level_space_line_edit import ScrollSpaceLineEdit
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class LineEditFieldWidget(QLineEdit, FieldWidget[str]):
         self.setText(str(value))
 
 
-class SpaceLineFieldWidget(SpaceLineEdit, FieldWidget[list]):
+class SpaceLineFieldWidget(ScrollSpaceLineEdit, FieldWidget[list]):
     def getValue(self) -> list:
         values = self.getValues()
         return values

@@ -1,7 +1,8 @@
 import logging
 
 from PyQt5.QtCore import QSettings
-from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QWidget, QFormLayout
+from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QWidget, QFormLayout, \
+    QScrollArea
 
 from pyqt_settings.field.base import Field
 from pyqt_utils.metaclass.geometry_saver import GeometrySaverMeta
@@ -33,17 +34,22 @@ def createSettingDialogClass(settings: QSettings = None):
             self._settings = settings_
 
             self.mainLayout = QVBoxLayout(self)
-            self.subLayout = QFormLayout()
-            self.mainLayout.addLayout(self.subLayout)
-
-            self.widgetToField = dict(self._createWidgets())
+            self.scrollArea = QScrollArea(self)
+            self.mainLayout.addWidget(self.scrollArea)
             self._createButtons()
+
+            self.contentWidget = QWidget(self.scrollArea)
+            self.contentLayout = QFormLayout(self.contentWidget)
+            self.contentLayout.setFieldGrowthPolicy(QFormLayout.AllNonFixedFieldsGrow)
+            self.widgetToField = dict(self._createWidgets())
+            self.scrollArea.setWidget(self.contentWidget)
+
             self.accepted.connect(self.save)
 
         def _createWidgets(self):
             for field in self._genSettingFields():
                 if widget := field.createWidget(self._settings):
-                    self.subLayout.addRow(field.displayName, widget)
+                    self.contentLayout.addRow(field.displayName, widget)
                     yield widget, field
 
         def _genSettingFields(self):
