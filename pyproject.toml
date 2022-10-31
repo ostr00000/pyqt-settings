@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyqt-settings"
+authors = [{ name = 'ostr00000' }]
+version = '0.3'
+description = "Descriptors for QSettings with GUI generating."
+
+requires-python = ">=3.8"
+dependencies = [
+    'PyQt5',
+    'boltons',
+    'decorator',
+]
+
+[tool.setuptools.packages.find]
+where = ["lib"]
+exclude = ["*tests*"]
+
+[tool.setuptools.package-data]
+"*" = ['*.svg', '*.jpg']
