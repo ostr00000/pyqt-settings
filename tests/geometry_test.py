@@ -1,6 +1,11 @@
 from PyQt5.QtCore import QSettings
-from PyQt5.QtWidgets import QApplication, QMainWindow, QDialog, QVBoxLayout, QDialogButtonBox
-
+from PyQt5.QtWidgets import (
+    QApplication,
+    QDialog,
+    QDialogButtonBox,
+    QMainWindow,
+    QVBoxLayout,
+)
 from pyqt_utils.metaclass.geometry_saver import GeometrySaverMeta
 
 
@@ -8,12 +13,15 @@ def main():
     settings = QSettings()
     app = QApplication([])
 
-    class MyMainWindow(QMainWindow, metaclass=GeometrySaverMeta.wrap(QMainWindow),
-                       settings=settings):
+    class MyMainWindow(QMainWindow, metaclass=GeometrySaverMeta, settings=settings):
         pass
 
-    class MyWidget(QDialog, metaclass=GeometrySaverMeta.wrap(QDialog),
-                   settings=settings):
+    class MyWidget(
+        QDialog,
+        metaclass=GeometrySaverMeta,
+        settings=settings,
+        saveName='geometry_dialog',
+    ):
         def __init__(self, parent=None):
             super().__init__(parent)
             self.verticalLayout = QVBoxLayout(self)
@@ -30,5 +38,5 @@ def main():
     app.exec()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -3,29 +3,31 @@ from __future__ import annotations
 import logging
 import re
 from functools import cached_property
-from typing import TypeVar, Generic, Union, Callable
+from typing import TYPE_CHECKING, Protocol, Self, overload
 
-from PyQt5.QtCore import QSettings, pyqtProperty, pyqtSignal, QObject
-from PyQt5.QtWidgets import QWidget, QHBoxLayout, QLabel, QPushButton
+from PyQt5.QtCore import QObject, QSettings, pyqtProperty, pyqtSignal
+from PyQt5.QtWidgets import QHBoxLayout, QLabel, QLayout, QPushButton, QWidget
 
-from pyqt_settings.gui_widget.base import FieldWidget
+if TYPE_CHECKING:
+    from pyqt_settings.gui_widget.base import FieldWidget
 
 logger = logging.getLogger(__name__)
-T = TypeVar('T')
-WidgetFactory_t = Union[
-    Callable[[QSettings, 'Field'], FieldWidget],
-    type[FieldWidget],
-]
 
 
-class DirtyController:
-    def __init__(self, widget: FieldWidget, field: Field):
+class WidgetFactoryType[T](Protocol):
+    def __call__(
+        self, *, settings: QSettings, field: Field[T], **factoryKwargs
+    ) -> FieldWidget[T]: ...
+
+
+class DirtyController[T]:
+    def __init__(self, widget: FieldWidget[T], field: Field[T]):
         self.widget = widget
         self.startValue = widget.getValue()
-        try:
-            widget.valueChanged.connect(self._setDirty)
-        except AttributeError:
-            pass
+
+        if (sig := getattr(widget, 'valueChanged', None)) is not None:
+            sig.connect(self._setDirty)
+
         field.valueChanged.connect(self.resetStartValue)
 
     def resetStartValue(self, newStartValue):
@@ -35,32 +37,40 @@ class DirtyController:
     def _setDirty(self):
         curValue = self.widget.getValue()
         if curValue == self.startValue:
-            toolTip, style = '', ''
+            toolTip, style = "", ""
         else:
-            style = 'border: 2px solid orange;'
-            toolTip = 'Unsaved changes'
+            style = "border: 2px solid orange;"
+            toolTip = "Unsaved changes"
         self.widget.setStyleSheet(style)
         self.widget.setToolTip(toolTip)
 
 
-class FieldWidgetWithLabel(QWidget):
-    def __init__(self, fieldWidget: FieldWidget, label: str,
-                 layoutType=QHBoxLayout, field: Field = None,
-                 settings: QSettings = None, connectSaveButton=True,
-                 parent=None):
-        super().__init__(parent)
+class FieldWidgetWithLabel[T](QWidget):
+    def __init__(
+        self,
+        fieldWidget: FieldWidget[T],
+        label: str,
+        layoutType: type[QLayout] = QHBoxLayout,
+        *,
+        field: Field[T],
+        settings: QSettings,
+        connectSaveButton: bool = True,
+        parent: QWidget | None = None,
+        **kwargs,
+    ):
+        super().__init__(parent=parent, **kwargs)
         self.fieldWidget = fieldWidget
         self.field = field
         self.dirty = DirtyController(fieldWidget, field)
         self.settings = settings
-        self.button = QPushButton('Save')
+        self.button = QPushButton("Save")
 
         if field and connectSaveButton:
             self.button.clicked.connect(self.onButtonClicked)
 
         layout = layoutType(self)
         layout.setContentsMargins(1, 1, 1, 1)
-        layout.addWidget(QLabel(label + ':'))
+        layout.addWidget(QLabel(label + ":"))
         layout.addWidget(fieldWidget)
         layout.addWidget(self.button)
 
@@ -81,63 +91,98 @@ class SigWrapper(QObject):
         self.valueChanged.connect(fun)
 
     def disconnect(self, fun=None):
-        self.valueChanged.disconnect(fun)
+        if fun is None:
+            self.valueChanged.disconnect()
+        else:
+            self.valueChanged.disconnect(fun)
 
     def emit(self, value):
         self.valueChanged.emit(value)
 
 
-class Field(pyqtProperty, Generic[T]):
+class Field[T](pyqtProperty):
     @cached_property
     def valueChanged(self):
         return SigWrapper()
 
-    def __init__(self, key: str, default: T = None, type_: type[T] = None):
-        super().__init__(object if type_ is None else type_)
-        if type_ is not None:
-            default = type_(default)
+    def __init__(self, key: str, default: T, type_: type[T | object] = object):
+        super().__init__(type_)
         self.key = key
         self.default = default
-        self.widgetFactory: WidgetFactory_t | None = None
-        self.name = None
+        self.widgetFactory: WidgetFactoryType[T] | None = None
+        self._name: str | None = None
 
     def __set_name__(self, owner: QSettings, name: str):
-        self.name = name
+        self._name = name
+
+    @property
+    def name(self):
+        if self._name is None:
+            msg = (
+                "`Field` class must be defined in class scope "
+                "before accessing `name` property"
+            )
+            raise TypeError(msg)
+        return self._name
+
+    @property
+    def typeAsClass(self) -> type:
+        if isinstance(self.type, str):
+            raise TypeError
+        return self.type
 
     def createWidget(self, instance: QSettings) -> FieldWidget | None:
         if self.widgetFactory is None:
             return None
 
-        widget = self.widgetFactory(instance, self)
+        widget = self.widgetFactory(settings=instance, field=self)
         widget.setValue(self.__get__(instance, type(instance)))
         self.valueChanged.connect(widget.setValue)
         return widget
 
     def createWidgetWithLabel(
-            self, instance: QSettings, parent=None, **kwargs
+        self, instance: QSettings, parent=None, **kwargs
     ) -> FieldWidgetWithLabel:
-        widget = self.createWidget(instance)
-        widgetWithLabel = FieldWidgetWithLabel(
-            widget, self.displayName, field=self,
-            settings=instance, parent=parent, **kwargs)
-        return widgetWithLabel
+        if (widget := self.createWidget(instance)) is None:
+            msg = f"There is no widget factory for {self.name}"
+            raise TypeError(msg)
+
+        return FieldWidgetWithLabel(
+            widget,
+            self.displayName,
+            field=self,
+            settings=instance,
+            parent=parent,
+            **kwargs,
+        )
 
     @cached_property
     def displayName(self):
-        """To square bracket ([]) use _LL and JJ.
-        All underscores (_) become spaces ( )."""
-        dn = self.name.replace('_LL', '_[').replace('JJ', ']')
-        dn = re.sub('([A-Z]+)', r'_\1', dn).replace('__', ' ')
-        dn = dn.lower().replace('_', ' ').strip().capitalize()
-        return dn
+        """
+        Generate display name based on variable name.
 
-    def __get__(self, instance: QSettings, owner: type[QSettings]) -> T | Field:
+        This function use following mapping:
+        - `_LL` -> `[`
+        - `JJ` -> `]`
+        - `_` -> ` ` (space).
+        """
+        dn = self.name.replace("_LL", "_[").replace("JJ", "]")
+        dn = re.sub("([A-Z]+)", r"_\1", dn).replace("__", " ")
+        return dn.lower().replace("_", " ").strip().capitalize()
+
+    @overload
+    def __get__(self, instance: None, owner: type[QSettings]) -> Self: ...
+
+    @overload
+    def __get__(self, instance: QSettings, owner: type[QSettings]) -> T: ...
+
+    def __get__(self, instance: QSettings | None, owner: type[QSettings]) -> T | Self:
         if instance is None:
             return self
         try:
-            return instance.value(self.key, self.default, self.type)
-        except TypeError as err:
-            logger.error(err)
+            return instance.value(self.key, self.default, self.typeAsClass)
+        except TypeError:
+            logger.exception("Cannot get value - fallback to default")
             return self.default
 
     def __set__(self, instance: QSettings, value: T):
