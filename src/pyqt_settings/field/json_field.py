@@ -1,6 +1,7 @@
 import json
 import logging
 from collections.abc import Callable
+from typing import Self, overload
 
 from PyQt5.QtCore import QSettings
 
@@ -31,20 +32,25 @@ class JsonField[C](StrField):
             raise TypeError
         self.jsonSerializeFun = jsonSerializeFun
 
-    def __get__(self, instance: QSettings, owner: type[QSettings]):
+    @overload
+    def __get__(self, instance: None, owner: type[QSettings]) -> Self: ...
+
+    @overload
+    def __get__(self, instance: QSettings, owner: type[QSettings]) -> C: ...
+
+    def __get__(self, instance: QSettings | None, owner: type[QSettings]) -> C | Self:
         if instance is None:
             return self
 
+        val = self.default
         try:
-            if not (val := super().__get__(instance, owner)):
-                return self.default
-            return self.castType(val)
-
+            val = super().__get__(instance, owner)
         except TypeError:
             logger.exception("Cannot extract or cast value - fallback to default")
-            return self.default
 
-    def __set__(self, instance: QSettings, value):
+        return self.castType(val)
+
+    def __set__(self, instance: QSettings, value: C | str):
         if not isinstance(value, str):
             value = self.jsonSerializeFun(value)
         super().__set__(instance, value)
