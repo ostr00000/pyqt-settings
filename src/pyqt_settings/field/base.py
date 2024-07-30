@@ -100,6 +100,8 @@ class SigWrapper(QObject):
         self.valueChanged.emit(value)
 
 
+# future update (python>=3.13):
+#  class Field[T, S=T](pyqtProperty):
 class Field[T](pyqtProperty):
     @cached_property
     def valueChanged(self):

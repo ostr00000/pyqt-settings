@@ -1,5 +1,5 @@
-import contextlib
 import logging
+from typing import Self, overload
 
 from PyQt5.QtCore import QByteArray, QSettings, QVariant
 
@@ -48,26 +48,49 @@ class IntField(Field[int]):
         self.widgetFactory = WidgetFactory(SpinBoxFieldWidget)
 
 
-class BytesField(Field[bytes | QByteArray]):
+# future update:
+#  class BytesField(Field[bytes, QByteArray | bytes | bytearray]):
+class BytesField(Field[bytes]):
     """Field represent python bytes."""
 
     def __init__(self, key, default=b""):
         super().__init__(key, default, bytes)
 
+    @overload
+    def __get__(self, instance: None, owner: type[QSettings]) -> Self: ...
+
+    @overload
+    def __get__(self, instance: QSettings, owner: type[QSettings]) -> bytes: ...
+
     def __get__(
-        self, instance: QSettings, owner: type[QSettings]
-    ) -> bytes | QByteArray | Field:
+        self, instance: QSettings | None, owner: type[QSettings]
+    ) -> bytes | Self:
         if instance is None:
             return self
 
-        with contextlib.suppress(TypeError):
-            return instance.value(self.key, self.default, self.typeAsClass)
-
         try:
-            return instance.value(self.key, self.default, QByteArray)
+            bytesObj = instance.value(self.key, self.default, self.typeAsClass)
         except TypeError:
-            logger.exception("Cannot get value - fallback to default")
-            return self.default
+            try:
+                bytesObj = instance.value(self.key, self.default, QByteArray)
+            except TypeError:
+                logger.exception("Cannot get value - fallback to default")
+                bytesObj = self.default
+
+        match bytesObj:
+            case QByteArray() as bA:
+                return bA.data()
+            case bytes(rawBytes):
+                return rawBytes
+            case _:
+                msg = f"Unexpected type for {self.key}: {type(bytesObj)}"
+                raise TypeError(msg)
+
+    def __set__(self, instance: QSettings, value: QByteArray | bytes | bytearray):
+        super().__set__(
+            instance,
+            QByteArray(value),  # type: ignore[reportArgumentType]
+        )
 
 
 class BoolField(Field[bool]):
