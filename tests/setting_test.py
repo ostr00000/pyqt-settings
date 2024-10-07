@@ -9,6 +9,7 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
 from pyqt_settings.dialog import createSettingDialogClass
 from pyqt_settings.factory.base import ConfigFunc, WidgetFactory
 from pyqt_settings.field.control import ControlledField
