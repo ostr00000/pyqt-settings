@@ -17,7 +17,7 @@ repos:
       - id: identity
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: check-added-large-files
         args: [ '--maxkb=500' ]
@@ -46,7 +46,7 @@ repos:
       - id: validate-pyproject
 
   - repo: https://github.com/pappasam/toml-sort
-    rev: v0.23.1
+    rev: v0.24.2
     hooks:
       - id: toml-sort-fix
         args:
@@ -56,7 +56,7 @@ repos:
     # original repo: https://github.com/crate-ci/typos
     # we use mirror repo, because tags in original repo are broken:
     # https://github.com/crate-ci/typos/issues/390
-    rev: v1.31.0
+    rev: v1.34.0
     hooks:
       - id: typos
         name: typos-diff
@@ -91,7 +91,7 @@ repos:
         args: [ --line-length=89 ]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.11.4
+    rev: v0.12.2
     hooks:
       - id: ruff
         name: ruff-diff
@@ -111,12 +111,12 @@ repos:
       - id: black
 
   - repo: https://github.com/jendrikseipp/vulture
-    rev: v2.11
+    rev: v2.14
     hooks:
       - id: vulture
 
   - repo: https://github.com/RobertCraigie/pyright-python
-    rev: v1.1.398
+    rev: v1.1.402
     hooks:
       - id: pyright
         verbose: true
